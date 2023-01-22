@@ -1,7 +1,8 @@
 import { Check } from 'phosphor-react'
 import * as Checkbox from '@radix-ui/react-checkbox'
-import { FormEvent, useEffect, useReducer } from 'react'
-import { Form, form_reducer, form_service } from '../core/reducers/form-reducer'
+import { FormEvent, useReducer } from 'react'
+import { Form, form_reducer } from '../core/reducers/habits-reducer'
+import { api } from '../lib/axios'
 
 const availableWeekDays = [
   'Domingo',
@@ -13,8 +14,6 @@ const availableWeekDays = [
   'Sábado',
 ]
 export function NewHabitForm() {
-  const { fetchForms } = form_service
-
   const initialFormState: Form = {
     title: '',
     weekDays: [],
@@ -41,11 +40,22 @@ export function NewHabitForm() {
 
   function createNewHabit(event: FormEvent) {
     event.preventDefault()
-  }
 
-  useEffect(() => {
-    console.log('form', form)
-  }, [form])
+    if (!form.title || form.weekDays.length === 0) {
+      return
+    }
+
+    api
+      .post('habits', {
+        title: form.title,
+        weekDays: form.weekDays,
+      })
+      .then((response) => {
+        dispatch({
+          type: 'reset',
+        })
+      })
+  }
 
   return (
     <form onSubmit={createNewHabit} className='w-full flex flex-col mt-6'>
@@ -59,6 +69,7 @@ export function NewHabitForm() {
         placeholder='Exercícios, dormir bem, etc...'
         className='p-4 rounded-lg mt-3 bg-zinc-800 text-white placeholder:text-zinc-400'
         autoFocus
+        value={form.title}
         onChange={(event) => handleAddTitle(event.target.value)}
       />
 
@@ -71,6 +82,7 @@ export function NewHabitForm() {
           <Checkbox.Root
             key={weekDay}
             className='flex items-center gap-3 group'
+            checked={form.weekDays.includes(index)}
             onCheckedChange={() => handleAddWeekDays(index)}
           >
             <div className='h-8 w-8 rounded-lg flex items-center justify-center bg-zinc-900 border-2 border-zinc-800 group-data-[state=checked]:bg-green-500 group-data-[state=checked]:border-green-500'>
